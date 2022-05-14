@@ -1,0 +1,188 @@
+<html>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+    <style>
+        #new-task-form-div {
+            display: none;
+        }
+    </style>
+    <body>
+        <h1>Simple ToDo</h1>
+        <hr>
+
+        <button onclick="toggleNewTaskForm()" id="new-task-btn">+</button>
+        <div id="new-task-form-div">
+            <form action="." method="post" id="new-task-form"> {% csrf_token %}
+                {{ form.as_p }}
+                <input type="button" value="Save" onclick="submitNewTaskForm()">
+            </form>
+        </div>
+
+
+        <div id="tasks">
+            <h2>Incomplete Tasks</h2>
+            <div id="incomplete-tasks">
+            </div>
+            
+            <h2>Complete Tasks</h2>
+            <div id="complete-tasks">
+            </div>
+        </div>
+
+        <p style="display:block"></p>
+        
+
+        <script>
+            $(document).ready(function(){
+                $.get(
+                    "{% url 'retrieve-all-data' %}",
+                    function(result){
+                        tasks = JSON.parse(result.data);
+                        var incomplete_elements = [];
+                        incomplete_elements.push("<table border=1 id='incomplete-data-table'><tr style='display:none'><td>test</td></tr>");
+                        var complete_elements = [];
+                        complete_elements.push("<table border=1 id='complete-data-table'><tr style='display:none'><td>test</td></tr>");
+                        
+                        for(var i=0; i<tasks.length; i++){
+                            if(!tasks[i].completed){
+                                
+                                incomplete_elements.push("<tr id="+tasks[i].id+">");
+                                    incomplete_elements.push("<td><div class='task'>");
+                                        incomplete_elements.push('<p>' + tasks[i].id + '</p>');
+                                        incomplete_elements.push("<p class='title'>" + tasks[i].title + '</p>');
+                                        incomplete_elements.push("<p class='description'>" + tasks[i].description + '</p>');
+                                        incomplete_elements.push("<p class='completed'>" + tasks[i].completed + '</p>');
+                                        incomplete_elements.push("<p>");
+                                            incomplete_elements.push("<input type='button' value='Mark as complete' id='"+tasks[i].id+"_complete-btn' onclick=toggleComplete("+tasks[i].id+")>"); 
+                                        incomplete_elements.push("</p>");
+                                        incomplete_elements.push("<p><button id='"+tasks[i].id+"_delete' onclick=deleteTask("+tasks[i].id+")>Delete</button></p>")
+                                    incomplete_elements.push("</div></td>");
+                                incomplete_elements.push('</tr>');
+                                
+                            }
+                            else{
+                                
+                                complete_elements.push("<tr id="+tasks[i].id+">");
+                                    complete_elements.push("<td><div class='task'>");
+                                        complete_elements.push('<p>' + tasks[i].id + '</p>');
+                                        complete_elements.push("<p class='title'>" + tasks[i].title + '</p>');
+                                        complete_elements.push("<p class='description'>" + tasks[i].description + '</p>');
+                                        complete_elements.push("<p class='completed'>" + tasks[i].completed + '</p>');
+                                        complete_elements.push("<p>");
+                                            complete_elements.push("<input type='button' value='Mark as incomplete' id='"+tasks[i].id+"_complete-btn' onclick=toggleComplete("+tasks[i].id+")>"); 
+                                        complete_elements.push("</p>");
+                                        complete_elements.push("<p><button id='"+tasks[i].id+"_delete' onclick=deleteTask("+tasks[i].id+")>Delete</button></p>")
+                                    complete_elements.push("</div></td>");
+                                complete_elements.push('</tr>');
+                                
+                            }
+                        }
+                        incomplete_elements.push('</table>');
+                        complete_elements.push('</table>');
+                        
+                        $('#incomplete-tasks').html(incomplete_elements.join(""));
+                        $('#complete-tasks').html(complete_elements.join(""));
+                    }
+                );
+            });
+
+            function toggleComplete(id){
+                $.get(
+                    "{% url 'toggle-status' id=1234%}".replace(/1234/, id),
+                    function(data, status){
+                        task = data.obj;
+                        document.getElementById(task.id).remove();
+                        elements = []
+                        elements.push("<tr id="+task.id+">");
+                            elements.push("<td><div class='task'>");
+                                elements.push('<p>' + task.id + '</p>');
+                                elements.push("<p class='title'>" + task.title + '</p>');
+                                elements.push("<p class='description'>" + task.description + '</p>');
+                                elements.push("<p class='completed'>" + task.completed + '</p>');
+                                if(task.completed){
+                                    elements.push("<p>");
+                                        elements.push("<input type='button' value='Mark as incomplete' id='"+task.id+"_complete-btn' onclick=toggleComplete("+task.id+")>"); 
+                                    elements.push("</p>");
+                                }
+                                else{
+                                    elements.push("<p>");
+                                        elements.push("<input type='button' value='Mark as complete' id='"+task.id+"_complete-btn' onclick=toggleComplete("+task.id+")>"); 
+                                    elements.push("</p>");
+                                }
+                                elements.push("<p><button id='"+task.id+"_delete' onclick=deleteTask("+task.id+")>Delete</button></p>")
+                            elements.push("</div></td>");
+                        elements.push('</tr>');
+                        if(task.completed){
+                            $('#complete-data-table tbody').append(elements.join(""));
+                        }
+                        else{
+                            $('#incomplete-data-table tbody').append(elements.join(""));
+                        }
+
+
+                    }
+                )
+            }
+
+            function toggleNewTaskForm(){
+                if ($("#new-task-form-div").css('display') == 'none'){
+                    $("#new-task-form-div").css('display','block');
+                    $("#new-task-btn").html('-');
+                }
+                else{
+                    $("#new-task-form-div").css('display','none');
+                    $("#new-task-btn").html('+');
+                }
+                
+            }
+
+            function submitNewTaskForm(){
+                const title = $("input[name='title']").val();
+                const description = $("textarea[name='description']").val();
+                const csrf_token = $("input[name='csrfmiddlewaretoken']").val();
+                form_data = {'title':title, 'description':description, 'csrfmiddlewaretoken':csrf_token};
+                $.post(
+                    "{% url 'new-task' %}",
+                    form_data,
+                    function(data, status){
+                        console.log(data);
+                        task = data.obj;
+                        elements = []
+                        elements.push("<tr id="+task.id+">");
+                            elements.push("<td><div class='task'>");
+                                elements.push('<p>' + task.id + '</p>');
+                                elements.push("<p class='title'>" + task.title + '</p>');
+                                elements.push("<p class='description'>" + task.description + '</p>');
+                                elements.push("<p class='completed'>" + task.completed + '</p>');
+                                if(task.completed){
+                                    elements.push("<p>");
+                                        elements.push("<input type='button' value='Mark as incomplete' id='"+task.id+"_complete-btn' onclick=toggleComplete("+task.id+")>"); 
+                                    elements.push("</p>");
+                                }
+                                else{
+                                    elements.push("<p>");
+                                        elements.push("<input type='button' value='Mark as complete' id='"+task.id+"_complete-btn' onclick=toggleComplete("+task.id+")>"); 
+                                    elements.push("</p>");
+                                }
+                                elements.push("<p><button id='"+task.id+"_delete' onclick=deleteTask("+task.id+")>Delete</button></p>")
+                            elements.push("</div></td>");
+                        elements.push('</tr>');
+                        $('#incomplete-data-table tbody').append(elements.join(""));
+                        document.getElementById('new-task-form').reset();
+                        toggleNewTaskForm();
+
+
+                    }
+                );
+            }
+            function deleteTask(id){
+                $.get(
+                    "{% url 'delete-task' id='1234' %}".replace(/1234/,id),
+                    function(data){
+                        document.getElementById(data.obj.id).remove();
+                    }
+                )
+            }
+        </script>
+    </body>
+</html>
