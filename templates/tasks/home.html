@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-8">
+        <div class="row add-button-div" id="new-task-btn-div">
+            <button class="col" id="add-button-btn" onclick="toggleNewTaskForm()">
+                <h1>+</h1>
+            </button>
+        </div>
+        <div class="row" id="create-form-div">
+            <div class="col">
+                {% include 'tasks/create_task.html' %}
+            </div>
+        </div>
+        {% for task in tasks %}
+        <div class="row task-div" data-task-id={{task.id}} data-task-completed-status={{task.task_completed|lower}}>
+            <div class="col">
+                <div class="row">
+                    <div class="col-10">
+                        <h4 class="task-title">{{task.task_title|title}}</h4>
+                    </div>
+                    <div class="col-1">
+                        <form class="edit-task-form" method="POST" onsubmit="return false">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-outline-dark edit-task-button"
+                                onclick="editTask('{{task.id}}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-pencil" viewBox="0 0 16 16">
+                                    <path
+                                        d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-1">
+                        <form class="delete-task-form" method="POST" onsubmit="return false">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-dark" onclick='deleteTask("{{task.id}}")'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-trash" viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd"
+                                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                </svg>
+                            </button>
+                        </form>
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <pre class="task-description">{{task.task_description|urlize}}</pre>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8"></div>
+                    <div class="col-4 text-wrap align-self-end">
+                        {% csrf_token %}
+                        {% if task.task_completed == True %}
+                        <button class="btn btn-outline-dark toggle-complete-status-btn w-100 text-wrap"
+                            onclick='toggleCompletedStatus("{{task.id}}")'>Mark as Incomplete</button>
+                        {% elif task.task_completed == False %}
+                        <button class="btn btn-outline-dark toggle-complete-status-btn w-100 text-wrap"
+                            onclick='toggleCompletedStatus("{{task.id}}")'>Mark as
+                            Complete</button>
+                        {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col-2"></div>
+</div>
+
+<script>
+    function toggleCompletedStatus(id) {
+        $.post("{% url 'mark-as-complete-ajax' %}",
+            {
+                task_id: id,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+            },
+            function (response, status) {
+                if (response.status == 1) {
+                    task = JSON.parse(response.task);
+                    task_div = $("div.task-div[data-task-id=" + task.id + "]");
+                    task_div.attr("data-task-completed-status", task.task_completed);
+                    if (task.task_completed == true) {
+                        task_div.find(".toggle-complete-status-btn").html("Mark as Incomplete");
+                    }
+                    else if (task.task_completed == false) {
+                        task_div.find(".toggle-complete-status-btn").html("Mark as Complete");
+                    }
+                }
+            }
+        )
+    }
+
+    function toggleNewTaskForm() {
+        if ($("#create-form-div").hasClass("active")) {
+            $("#create-form-div").removeClass("active");
+            $("#new-task-btn-div h1").html("+");
+        }
+        else {
+            $("#create-form-div").addClass("active");
+            $("#new-task-btn-div h1").html("-");
+        }
+    }
+
+    function deleteTask(id) {
+        $.post("{% url 'delete-task-ajax' %}",
+            {
+                task_id: id,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+            },
+            function (response, status) {
+                if (response.status == 1) {
+                    task_id = response.task_id;
+                    $("div[data-task-id='" + task_id + "']").remove();
+                }
+            }
+        );
+    }
+
+    function editTask(id) {
+        var task_title = $("div[data-task-id='" + id + "'] h4.task-title").html();
+        var task_description = $("div[data-task-id='" + id + "'] pre.task-description").html();
+        $("div[data-task-id='" + id + "']").addClass("edit-task-div");
+        $("div[data-task-id='" + id + "'] h4.task-title").html('{{form.task_title|escapejs}}');
+        $("div[data-task-id='" + id + "'] pre.task-description").html('{{form.task_description|escapejs}}');
+        $("div[data-task-id='" + id + "'] h4.task-title input[type=text]").val(task_title);
+        $("div[data-task-id='" + id + "'] pre.task-description textarea").val(task_description);
+        $("div[data-task-id='" + id + "'] .toggle-complete-status-btn").html("Done");
+        $("div[data-task-id='" + id + "'] .edit-task-form").css("display", "none");
+        $("div[data-task-id='" + id + "'] .delete-task-form").css("display", "none");
+        $("div[data-task-id='" + id + "'] .toggle-complete-status-btn").attr("onclick", "submitEditTaskForm('" + id + "')");
+    }
+
+    function submitEditTaskForm(id) {
+        var task_title = $("div[data-task-id='" + id + "'] h4.task-title input[type=text]").val();
+        var task_description = $("div[data-task-id='" + id + "'] pre.task-description textarea").val();
+        console.log(task_title);
+        console.log(task_description);
+        $.post(
+            "{% url 'edit-task-ajax' %}",
+            {
+                task_id: id,
+                task_title: task_title,
+                task_description: task_description,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+            },
+            function (response, status) {
+                if (response.status == 1) {
+                    var task_title = JSON.parse(response.task).task_title;
+                    var task_description = JSON.parse(response.task).task_description;
+                    $("div[data-task-id='" + id + "']").removeClass("edit-task-div");
+                    $("div[data-task-id='" + id + "'] h4.task-title").html(task_title);
+                    $("div[data-task-id='" + id + "'] pre.task-description").html(task_description);
+                    $("div[data-task-id='" + id + "'] .edit-task-form").css("display", "block");
+                    $("div[data-task-id='" + id + "'] .delete-task-form").css("display", "block");
+                    if (JSON.parse(response.task).task_completed == true) {
+                        $("div[data-task-id='" + id + "'] .toggle-complete-status-btn").html("Mark as Incomplete");
+                    }
+                    else { $("div[data-task-id='" + id + "'] .toggle-complete-status-btn").html("Mark as Complete"); };
+                }
+            }
+        );
+    }
+</script>
+{% endblock content %}
