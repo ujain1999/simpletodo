@@ -1,3 +1,5 @@
+venv/*
+static/*
 simpletodo/.env
 simpletodo/migrations/*
 simpletodo/__pycache__/*
