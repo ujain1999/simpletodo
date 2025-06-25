@@ -7,3 +7,4 @@ tasks/migrations/*
 tasks/__pycache__/*
 user_auth/migrations/*
 user_auth/__pycache__/*
+.env
