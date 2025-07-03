@@ -83,21 +83,10 @@ WSGI_APPLICATION = 'simpletodo.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': env('MYSQL_DATABASE_NAME'),
-        'USER': env('MYSQL_DATABASE_USER'),
-        'PASSWORD': env('MYSQL_DATABASE_PASSWORD'),
-        'HOST': env('MYSQL_DATABASE_HOST'),   # Or an IP Address that your DB is hosted on
-        'PORT': env('MYSQL_DATABASE_PORT'),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
