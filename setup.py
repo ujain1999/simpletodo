@@ -31,7 +31,7 @@ def unzip_static_files(path):
     f.close()
     print('Extracted static files to /static folder')
 
-def create_env_file(creds):
+def create_env_file():
     f = open(os.path.join(BASE_DIR,'simpletodo','.env'), 'w')
     txt = f"DJANGO_SECRET_KEY=django-insecure-q113-fz49lh6eg8qg=yd)#9v4a$lg%h0p#6uiz3(-&+f93l%h6"
     f.write(txt)
@@ -42,6 +42,7 @@ def main():
     try:
         create_migrations_dirs()
         unzip_static_files('static.zip')
+        create_env_file()
         print('Done\n')
         print('Run the following command to install required packages:\n')
         print("pip install -r requirements.txt")
