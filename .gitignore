@@ -9,3 +9,4 @@ user_auth/migrations/*
 user_auth/__pycache__/*
 .env
 *.sqlite3
+.DS_Store
